@@ -3,7 +3,7 @@ import {ENV} from "./env.js"
 
 export const connectDB=async()=>{ 
     try{ 
-        IF(!ENV.DB_URL){ 
+        if(!ENV.DB_URL){ 
             throw new Error("Missing DB_URL in environment variables.");
         }
       const conn=  await mongoose.connect(ENV.DB_URL)
