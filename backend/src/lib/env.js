@@ -9,5 +9,5 @@ export const ENV={
     INGEST_SIGNING_KEY:process.env.INGEST_SIGNING_KEY,
     STREAM_API_KEY:process.env.STREAM_API_KEY,
     STREAM_API_SECRET:process.env.STREAM_API_SECRET,
-    CLERK_WEBHOOK_SECRET:process.env.CLERK_WEBHOOK_SECRET,
+ 
 }

@@ -5,10 +5,10 @@ import {ENV} from "./lib/env.js" //local file i.e. why we use .js extension
 import { connectDB } from "./lib/db.js";
 import {inngest} from "./lib/inngest.js"
 import { functions } from "./lib/inngest.js";
-import webhookRoutes from "./routes/webhooks.js";
+
 const app=express();
 
-app.use("/api/webhooks", webhookRoutes);
+
 
 //middleware
 app.use(express.json());
