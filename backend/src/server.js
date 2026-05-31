@@ -12,7 +12,6 @@ app.use("/api/webhooks", webhookRoutes);
 
 //middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 // credentials:true   means => server allows a browser(frontend) to include cookies on request
 app.use(cors({origin:ENV.CLIENT_URL,credentials:true}))
 
