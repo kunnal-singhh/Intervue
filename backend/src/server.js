@@ -3,8 +3,8 @@ import cors from "cors";
 import {serve} from  "inngest/express"
 import {ENV} from "./lib/env.js" //local file i.e. why we use .js extension
 import { connectDB } from "./lib/db.js";
-import {inngest} from "./lib/inngest.js"
-import { functions } from "./lib/inngest.js";
+import {inngest,functions} from "./lib/inngest.js"
+
 
 const app=express();
 
