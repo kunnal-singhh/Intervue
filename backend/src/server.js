@@ -7,16 +7,13 @@ import {inngest} from "./lib/inngest.js"
 import { functions } from "./lib/inngest.js";
 const app=express();
 
-
-
-app.use("/api/inngest",serve({client:inngest,functions}))
 //middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // credentials:true   means => server allows a browser(frontend) to include cookies on request
 app.use(cors({origin:ENV.CLIENT_URL,credentials:true}))
 
-
+app.use("/api/inngest",serve({client:inngest,functions}))
 
 
 
