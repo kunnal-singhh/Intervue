@@ -19,21 +19,9 @@ async({event})=>{
 }
 
 )
-const updateUser = inngest.createFunction(
-{id:"update-user"},
-{event:"clerk/user.updated"},
-async({event})=>{ 
-    await connectDB();
-    const {id,email_addresses,first_name,last_name,image_url}=event.data;
-    const updatedUser={ 
-        email:email_addresses[0]?.email_address,
-        name:`${first_name || ""} ${last_name || ""}`.trim(),
-        profileImage:image_url
-    }
-    await User.updateOne({clerkId:id}, updatedUser)
-}
 
-)
+
+
 const deleteUserFromDB = inngest.createFunction(
 {id:"delete-user-from-db"},
 {event:"clerk/user.deleted"},
