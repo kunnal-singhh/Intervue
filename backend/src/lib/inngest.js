@@ -32,7 +32,7 @@ const syncUser = inngest.createFunction(
         image:newUser.profileImage,
       });
 
-      console.log("✅ User synced:", newUser);
+      console.log("✅ User synced with DB and Stream:", newUser);
 
     } catch (error) {
       console.error("❌ Error syncing user:", error);
@@ -51,7 +51,7 @@ const deleteUserFromDB = inngest.createFunction(
       await User.deleteOne({ clerkId: id });
       await deleteStreamUser(id.toString());
 
-      console.log("🗑️ User deleted:", id);
+      console.log("🗑️ User deleted from DB and Stream:", id);
 
     } catch (error) {
       console.error("❌ Error deleting user:", error);
