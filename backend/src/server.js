@@ -7,6 +7,7 @@ import {inngest,functions} from "./lib/inngest.js"
 import { clerkMiddleware } from '@clerk/express'
 import chatRoutes from "./routes/chatRoutes.js"
 import sessionRoutes from "./routes/sessionRoutes.js";
+import codeRoutes from "./routes/codeRoutes.js";
 
 
 const app=express();
@@ -32,6 +33,7 @@ app.use(clerkMiddleware())
 app.use("/api/inngest",serve({client:inngest,functions}));
 app.use("/api/chat",chatRoutes)  // all routes in chatRoutes will be prefixed with /api/chat
 app.use("/api/sessions",sessionRoutes)  // all routes in sessionRoutes will be prefixed with /api/sessions
+app.use("/api/code",codeRoutes)
 
 
 app.get("/health",(req,res)=>{ 
