@@ -1,6 +1,7 @@
 import { useUser } from "@clerk/clerk-react";
 import { Loader2Icon, LogOutIcon, PhoneOffIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useNavigate, useParams } from "react-router";
 import CodeEditorPanel from "../components/CodeEditorPanel";
@@ -60,8 +61,14 @@ function SessionPage() {
   useEffect(() => {
     if (!session || loadingSession) return;
 
-    if (session.status === "completed") navigate("/dashboard");
-  }, [session, loadingSession, navigate]);
+    if (session.status === "completed") {
+      // If the current user is not the host, notify them that the session has ended
+      if (!isHost) {
+        toast.success("The host has ended the session");
+      }
+      navigate("/dashboard");
+    }
+  }, [session, loadingSession, navigate, isHost]);
 
   // update code when problem loads or changes
   useEffect(() => {
