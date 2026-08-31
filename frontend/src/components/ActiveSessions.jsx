@@ -42,17 +42,17 @@ function ActiveSessions({ sessions, isLoading, isUserInSession }) {
                 key={session._id}
                 className="card bg-base-200 border-2 border-base-300 hover:border-primary/50"
               >
-                <div className="flex items-center justify-between gap-4 p-5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5">
                   {/* LEFT SIDE */}
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="relative size-14 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                      <Code2Icon className="size-7 text-white" />
-                      <div className="absolute -top-1 -right-1 size-4 bg-success rounded-full border-2 border-base-100" />
+                  <div className="flex items-center gap-3 sm:gap-4 flex-1 w-full min-w-0">
+                    <div className="relative size-12 sm:size-14 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+                      <Code2Icon className="size-6 sm:size-7 text-white" />
+                      <div className="absolute -top-1 -right-1 size-3.5 sm:size-4 bg-success rounded-full border-2 border-base-100" />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-bold text-lg truncate">{session.problem}</h3>
+                      <div className="flex flex-wrap items-center gap-2 mb-1 sm:mb-2">
+                        <h3 className="font-bold text-base sm:text-lg truncate max-w-[180px] sm:max-w-none">{session.problem}</h3>
                         <span
                           className={`badge badge-sm ${getDifficultyBadgeClass(
                             session.difficulty
@@ -63,13 +63,13 @@ function ActiveSessions({ sessions, isLoading, isUserInSession }) {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-4 text-sm opacity-80">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm opacity-80">
                         <div className="flex items-center gap-1.5">
-                          <CrownIcon className="size-4" />
-                          <span className="font-medium">{session.host?.name}</span>
+                          <CrownIcon className="size-3.5 sm:size-4" />
+                          <span className="font-medium truncate max-w-[120px] sm:max-w-none">{session.host?.name}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <UsersIcon className="size-4" />
+                          <UsersIcon className="size-3.5 sm:size-4" />
                           <span className="text-xs">{session.participant ? "2/2" : "1/2"}</span>
                         </div>
                         {session.participant && !isUserInSession(session) ? (
@@ -82,9 +82,9 @@ function ActiveSessions({ sessions, isLoading, isUserInSession }) {
                   </div>
 
                   {session.participant && !isUserInSession(session) ? (
-                    <button className="btn btn-disabled btn-sm">Full</button>
+                    <button className="btn btn-disabled btn-sm w-full sm:w-auto">Full</button>
                   ) : (
-                    <Link to={`/session/${session._id}`} className="btn btn-primary btn-sm gap-2">
+                    <Link to={`/session/${session._id}`} className="btn btn-primary btn-sm gap-2 w-full sm:w-auto justify-center">
                       {isUserInSession(session) ? "Rejoin" : "Join"}
                       <ArrowRightIcon className="size-4" />
                     </Link>

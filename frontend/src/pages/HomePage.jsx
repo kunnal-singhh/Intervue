@@ -27,7 +27,7 @@ function HomePage() {
 
             <div className="flex flex-col">
               <span className="font-black text-xl bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent font-mono tracking-wider">
-                Talent IQ
+                Intervue
               </span>
               <span className="text-xs text-base-content/60 font-medium -mt-1">Code Together</span>
             </div>
@@ -44,16 +44,16 @@ function HomePage() {
       </nav>
 
       {/* HERO SECTION */}
-      <div className="max-w-7xl mx-auto px-4 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-20">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
           {/* LEFT CONTENT */}
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             <div className="badge badge-primary badge-lg">
               <ZapIcon className="size-4" />
               Real-time Collaboration
             </div>
 
-            <h1 className="text-5xl lg:text-7xl font-black leading-tight">
+            <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black leading-tight">
               <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
                 Code Together,
               </span>
@@ -61,13 +61,13 @@ function HomePage() {
               <span className="text-base-content">Learn Together</span>
             </h1>
 
-            <p className="text-xl text-base-content/70 leading-relaxed max-w-xl">
+            <p className="text-base sm:text-xl text-base-content/70 leading-relaxed max-w-xl">
               The ultimate platform for collaborative coding interviews and pair programming.
               Connect face-to-face, code in real-time, and ace your technical interviews.
             </p>
 
             {/* FEATURE PILLS */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <div className="badge badge-lg badge-outline">
                 <CheckIcon className="size-4 text-success" />
                 Live Video Chat
@@ -83,22 +83,22 @@ function HomePage() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <SignInButton mode="modal">
-                <button className="btn btn-primary btn-lg">
+                <button className="btn btn-primary btn-lg w-full sm:w-auto">
                   Start Coding Now
                   <ArrowRightIcon className="size-5" />
                 </button>
               </SignInButton>
 
-              <button className="btn btn-outline btn-lg">
+              <button className="btn btn-outline btn-lg w-full sm:w-auto">
                 <VideoIcon className="size-5" />
                 Watch Demo
               </button>
             </div>
 
             {/* STATS */}
-            <div className="stats stats-vertical lg:stats-horizontal bg-base-100 shadow-lg">
+            <div className="stats stats-vertical sm:stats-horizontal bg-base-100 shadow-lg w-full sm:w-auto">
               <div className="stat">
                 <div className="stat-value text-primary">10K+</div>
                 <div className="stat-title">Active Users</div>
@@ -117,33 +117,33 @@ function HomePage() {
           {/* RIGHT IMAGE */}
           <img
             src="/hero.png"
-            alt="CodeCollab Platform"
-            className="w-full h-auto rounded-3xl shadow-2xl border-4 border-base-100 hover:scale-105 transition-transform duration-500"
+            alt="Intervue Platform"
+            className="w-full h-auto rounded-2xl sm:rounded-3xl shadow-2xl border-2 sm:border-4 border-base-100 hover:scale-105 transition-transform duration-500"
           />
         </div>
       </div>
 
       {/* FEATURES SECTION */}
-      <div className="max-w-7xl mx-auto px-4 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        <div className="text-center mb-10 sm:mb-16">
+          <h2 className="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4">
             Everything You Need to <span className="text-primary font-mono">Succeed</span>
           </h2>
-          <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-lg text-base-content/70 max-w-2xl mx-auto">
             Powerful features designed to make your coding interviews seamless and productive
           </p>
         </div>
 
         {/* FEATURES GRID */}
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
           {/* Feature 1 */}
           <div className="card bg-base-100 shadow-xl">
-            <div className="card-body items-center text-center">
+            <div className="card-body items-center text-center p-6">
               <div className="size-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
                 <VideoIcon className="size-8 text-primary" />
               </div>
-              <h3 className="card-title">HD Video Call</h3>
-              <p className="text-base-content/70">
+              <h3 className="card-title text-xl">HD Video Call</h3>
+              <p className="text-sm sm:text-base text-base-content/70">
                 Crystal clear video and audio for seamless communication during interviews
               </p>
             </div>
@@ -151,25 +151,25 @@ function HomePage() {
 
           {/* Feature 2 */}
           <div className="card bg-base-100 shadow-xl">
-            <div className="card-body items-center text-center">
+            <div className="card-body items-center text-center p-6">
               <div className="size-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
                 <Code2Icon className="size-8 text-primary" />
               </div>
-              <h3 className="card-title">Live Code Editor</h3>
-              <p className="text-base-content/70">
+              <h3 className="card-title text-xl">Live Code Editor</h3>
+              <p className="text-sm sm:text-base text-base-content/70">
                 Collaborate in real-time with syntax highlighting and multiple language support
               </p>
             </div>
           </div>
 
           {/* Feature 3 */}
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body items-center text-center">
+          <div className="card bg-base-100 shadow-xl sm:col-span-2 md:col-span-1">
+            <div className="card-body items-center text-center p-6">
               <div className="size-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
                 <UsersIcon className="size-8 text-primary" />
               </div>
-              <h3 className="card-title">Easy Collaboration</h3>
-              <p className="text-base-content/70">
+              <h3 className="card-title text-xl">Easy Collaboration</h3>
+              <p className="text-sm sm:text-base text-base-content/70">
                 Share your screen, discuss solutions, and learn from each other in real-time
               </p>
             </div>

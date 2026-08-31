@@ -67,7 +67,9 @@ function VideoCallUI({ chatClient, channel }) {
       {chatClient && channel && (
         <div
           className={`flex flex-col rounded-lg shadow overflow-hidden bg-[#272a30] transition-all duration-300 ease-in-out ${
-            isChatOpen ? "w-80 opacity-100" : "w-0 opacity-0"
+            isChatOpen
+              ? "w-full sm:w-80 opacity-100 absolute sm:relative inset-0 z-40 sm:z-auto"
+              : "w-0 opacity-0"
           }`}
         >
           {isChatOpen && (

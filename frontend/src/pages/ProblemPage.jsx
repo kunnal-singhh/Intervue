@@ -12,7 +12,10 @@ import { executeCode } from "../lib/codeExecution";
 import toast from "react-hot-toast";
 import confetti from "canvas-confetti";
 
+import { useIsMobile } from "../hooks/useIsMobile";
+
 function ProblemPage() {
+  const isMobile = useIsMobile();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -111,9 +114,9 @@ function ProblemPage() {
       <Navbar />
 
       <div className="flex-1">
-        <PanelGroup direction="horizontal">
+        <PanelGroup direction={isMobile ? "vertical" : "horizontal"}>
           {/* left panel- problem desc */}
-          <Panel defaultSize={40} minSize={30}>
+          <Panel defaultSize={isMobile ? 50 : 40} minSize={20}>
             <ProblemDescription
               problem={currentProblem}
               currentProblemId={currentProblemId}
@@ -122,7 +125,7 @@ function ProblemPage() {
             />
           </Panel>
 
-          <PanelResizeHandle className="w-2 bg-base-300 hover:bg-primary transition-colors cursor-col-resize" />
+          <PanelResizeHandle className={isMobile ? "h-2 bg-base-300 hover:bg-primary transition-colors cursor-row-resize" : "w-2 bg-base-300 hover:bg-primary transition-colors cursor-col-resize"} />
 
           {/* right panel- code editor & output */}
           <Panel defaultSize={60} minSize={30}>
