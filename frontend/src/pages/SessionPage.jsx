@@ -15,6 +15,7 @@ import { getDifficultyBadgeClass } from "../lib/utils";
 import { StreamCall, StreamVideo } from "@stream-io/video-react-sdk";
 import VideoCallUI from "../components/VideoCallUI";
 import EndSessionModal from "../components/EndSessionModal";
+import InterviewTimer from "../components/InterviewTimer";
 import useStreamClient from "../hooks/useStreamClient";
 import { useIsMobile } from "../hooks/useIsMobile";
 
@@ -281,6 +282,8 @@ function SessionPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <InterviewTimer isHost={isHost} channel={channel} user={user} />
+
                         <button
                           onClick={handleCopyLink}
                           className="btn btn-outline btn-xs sm:btn-sm gap-1.5"
