@@ -26,10 +26,45 @@ export const markProblemSolved = async (req, res) => {
 export const getUserProgress = async (req, res) => {
   try {
     const userId = req.user._id;
-    const user = await User.findById(userId).select("solvedProblems");
-    res.status(200).json({ solvedProblems: user?.solvedProblems || [] });
+    const user = await User.findById(userId).select("solvedProblems starredProblems");
+    res.status(200).json({
+      solvedProblems: user?.solvedProblems || [],
+      starredProblems: user?.starredProblems || [],
+    });
   } catch (error) {
     console.error("Error in getUserProgress controller:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const toggleStarProblem = async (req, res) => {
+  try {
+    const { problemId } = req.params;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.starredProblems) user.starredProblems = [];
+
+    const index = user.starredProblems.indexOf(problemId);
+    let isStarred = false;
+    if (index > -1) {
+      user.starredProblems.splice(index, 1);
+      isStarred = false;
+    } else {
+      user.starredProblems.push(problemId);
+      isStarred = true;
+    }
+
+    await user.save();
+    res.status(200).json({
+      success: true,
+      isStarred,
+      starredProblems: user.starredProblems,
+    });
+  } catch (error) {
+    console.error("Error in toggleStarProblem controller:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

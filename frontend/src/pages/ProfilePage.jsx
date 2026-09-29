@@ -1,8 +1,10 @@
 import { useUser } from "@clerk/clerk-react";
+import { Link } from "react-router";
 import { useMyRecentSessions } from "../hooks/useSessions";
 import { useUserProgress, useUserStats } from "../hooks/useUserProgress";
 import Navbar from "../components/Navbar";
 import { useState } from "react";
+import { PROBLEMS } from "../data/problems";
 import {
   UserIcon,
   CodeIcon,
@@ -15,6 +17,8 @@ import {
   ChevronRight,
   Loader,
   Star,
+  BookmarkIcon,
+  SparklesIcon,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDifficultyBadgeClass } from "../lib/utils";
@@ -37,6 +41,7 @@ function ProfilePage() {
 
   const sessions = sessionsData?.sessions || [];
   const solvedProblems = progressData?.solvedProblems || [];
+  const starredProblems = progressData?.starredProblems || [];
   // Use backend-aggregated stats when available, fallback to client-side
   const avgDuration = statsData?.avgDuration;
   const uniqueProblems = statsData?.uniqueProblems ?? sessions.length;
@@ -135,7 +140,7 @@ function ProfilePage() {
           </div>
 
           {/* EXTRA STATS ROW */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <div className="card bg-base-100 shadow-sm">
               <div className="card-body p-4 text-center">
                 <div className="text-3xl font-black text-accent">{solvedProblems.length}</div>
@@ -144,13 +149,19 @@ function ProfilePage() {
             </div>
             <div className="card bg-base-100 shadow-sm">
               <div className="card-body p-4 text-center">
+                <div className="text-3xl font-black text-warning">{starredProblems.length}</div>
+                <div className="text-xs opacity-60 mt-1">Bookmarked</div>
+              </div>
+            </div>
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body p-4 text-center">
                 <div className="text-3xl font-black text-info">{uniqueProblems}</div>
                 <div className="text-xs opacity-60 mt-1">Unique Problems</div>
               </div>
             </div>
-            <div className="card bg-base-100 shadow-sm col-span-2 sm:col-span-1">
+            <div className="card bg-base-100 shadow-sm">
               <div className="card-body p-4 text-center">
-                <div className="text-3xl font-black text-warning">
+                <div className="text-3xl font-black text-primary">
                   {avgDuration !== null && avgDuration !== undefined ? `${avgDuration}m` : "—"}
                 </div>
                 <div className="text-xs opacity-60 mt-1">Avg Session Duration</div>
@@ -334,6 +345,58 @@ function ProfilePage() {
               )}
             </div>
           </div>
+
+          {/* BOOKMARKED PROBLEMS FOR REVIEW */}
+          {starredProblems.length > 0 && (
+            <div className="card bg-base-100 shadow-sm mt-6">
+              <div className="card-body">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-warning/10 rounded-xl">
+                      <Star className="w-5 h-5 text-warning fill-warning" />
+                    </div>
+                    <div>
+                      <h2 className="font-bold text-lg">Bookmarked Problems</h2>
+                      <p className="text-xs text-base-content/60">
+                        {starredProblems.length} saved for interview practice
+                      </p>
+                    </div>
+                  </div>
+                  <Link to="/problems" className="btn btn-ghost btn-sm text-xs gap-1">
+                    <span>View All</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {starredProblems.map((probId) => {
+                    const prob = PROBLEMS[probId];
+                    if (!prob) return null;
+                    return (
+                      <Link
+                        key={prob.id}
+                        to={`/problem/${prob.id}`}
+                        className="flex items-center justify-between p-3.5 rounded-xl bg-base-200 hover:bg-base-300 transition-colors group"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                              {prob.title}
+                            </span>
+                            <span className={`badge badge-xs ${getDifficultyBadgeClass(prob.difficulty)}`}>
+                              {prob.difficulty}
+                            </span>
+                          </div>
+                          <p className="text-xs text-base-content/50 mt-0.5">{prob.category}</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-primary" />
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

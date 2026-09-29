@@ -2,25 +2,44 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router";
 import Navbar from "../components/Navbar";
 import { PROBLEMS } from "../data/problems";
-import { ChevronRightIcon, Code2Icon, SearchIcon, XIcon, FilterIcon, CheckCircle2Icon } from "lucide-react";
+import {
+  ChevronRightIcon,
+  Code2Icon,
+  SearchIcon,
+  XIcon,
+  FilterIcon,
+  CheckCircle2Icon,
+  StarIcon,
+  BookmarkIcon,
+} from "lucide-react";
 import { getDifficultyBadgeClass } from "../lib/utils";
-import { useUserProgress } from "../hooks/useUserProgress";
+import { useUserProgress, useToggleStarProblem } from "../hooks/useUserProgress";
+import toast from "react-hot-toast";
 
 const DIFFICULTIES = ["All", "Easy", "Medium", "Hard"];
+const STATUS_FILTERS = [
+  { id: "All", label: "All Problems" },
+  { id: "Solved", label: "Solved" },
+  { id: "Starred", label: "Bookmarked" },
+];
 
 function ProblemsPage() {
   const problems = Object.values(PROBLEMS);
   const [search, setSearch] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState("All");
+
   const { data: progressData } = useUserProgress();
+  const toggleStarMutation = useToggleStarProblem();
+
   const solvedProblemIds = new Set((progressData?.solvedProblems || []).map((p) => p.problemId));
+  const starredProblemIds = new Set(progressData?.starredProblems || []);
 
   // Extract all unique top-level categories
   const allCategories = useMemo(() => {
     const cats = new Set();
     problems.forEach((p) => {
-      // Take first tag from "Array • Two Pointers" style
       const first = p.category?.split("•")[0]?.trim();
       if (first) cats.add(first);
     });
@@ -37,21 +56,49 @@ function ProblemsPage() {
         selectedDifficulty === "All" || p.difficulty === selectedDifficulty;
       const matchesCategory =
         selectedCategory === "All" || p.category.includes(selectedCategory);
-      return matchesSearch && matchesDifficulty && matchesCategory;
+      const matchesStatus =
+        selectedStatus === "All" ||
+        (selectedStatus === "Solved" && solvedProblemIds.has(p.id)) ||
+        (selectedStatus === "Starred" && starredProblemIds.has(p.id));
+
+      return matchesSearch && matchesDifficulty && matchesCategory && matchesStatus;
     });
-  }, [problems, search, selectedDifficulty, selectedCategory]);
+  }, [problems, search, selectedDifficulty, selectedCategory, selectedStatus, solvedProblemIds, starredProblemIds]);
 
   const easyCount = problems.filter((p) => p.difficulty === "Easy").length;
   const mediumCount = problems.filter((p) => p.difficulty === "Medium").length;
   const hardCount = problems.filter((p) => p.difficulty === "Hard").length;
   const solvedCount = problems.filter((p) => solvedProblemIds.has(p.id)).length;
+  const starredCount = problems.filter((p) => starredProblemIds.has(p.id)).length;
 
-  const hasFilters = search || selectedDifficulty !== "All" || selectedCategory !== "All";
+  const hasFilters =
+    search ||
+    selectedDifficulty !== "All" ||
+    selectedCategory !== "All" ||
+    selectedStatus !== "All";
 
   const clearFilters = () => {
     setSearch("");
     setSelectedDifficulty("All");
     setSelectedCategory("All");
+    setSelectedStatus("All");
+  };
+
+  const handleToggleStar = (e, problemId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleStarMutation.mutate(problemId, {
+      onSuccess: (data) => {
+        if (data.isStarred) {
+          toast.success("Problem bookmarked for review!");
+        } else {
+          toast("Bookmark removed", { icon: "⭐️" });
+        }
+      },
+      onError: () => {
+        toast.error("Could not update bookmark");
+      },
+    });
   };
 
   return (
@@ -63,18 +110,19 @@ function ProblemsPage() {
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold mb-2">Practice Problems</h1>
           <p className="text-sm sm:text-base text-base-content/70">
-            Sharpen your coding skills with {problems.length} curated problems
+            Sharpen your technical interview readiness with {problems.length} curated algorithms
           </p>
         </div>
 
         {/* STATS ROW */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           {[
-        { label: "Total", count: problems.length, color: "text-primary" },
+            { label: "Total", count: problems.length, color: "text-primary" },
             { label: "Easy", count: easyCount, color: "text-success" },
             { label: "Medium", count: mediumCount, color: "text-warning" },
             { label: "Hard", count: hardCount, color: "text-error" },
             { label: "Solved", count: solvedCount, color: "text-accent" },
+            { label: "Bookmarked", count: starredCount, color: "text-warning" },
           ].map(({ label, count, color }) => (
             <div key={label} className="card bg-base-100 shadow-sm">
               <div className="card-body p-3 sm:p-4 text-center">
@@ -87,71 +135,99 @@ function ProblemsPage() {
 
         {/* SEARCH & FILTER BAR */}
         <div className="card bg-base-100 shadow-sm mb-6">
-          <div className="card-body p-4 flex flex-col sm:flex-row gap-3">
-            {/* Search */}
-            <div className="relative flex-1">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40" />
-              <input
-                id="problem-search"
-                type="text"
-                placeholder="Search problems or topics..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="input input-bordered w-full pl-9 text-sm"
-              />
-              {search && (
+          <div className="card-body p-4 space-y-3">
+            {/* Status tabs */}
+            <div className="flex items-center gap-1.5 border-b border-base-300 pb-2.5 overflow-x-auto">
+              {STATUS_FILTERS.map((tab) => (
                 <button
-                  onClick={() => setSearch("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
+                  key={tab.id}
+                  onClick={() => setSelectedStatus(tab.id)}
+                  className={`btn btn-xs sm:btn-sm gap-1.5 ${
+                    selectedStatus === tab.id
+                      ? "btn-primary font-bold shadow-sm"
+                      : "btn-ghost text-base-content/70"
+                  }`}
                 >
-                  <XIcon className="w-4 h-4" />
+                  {tab.id === "Starred" && <StarIcon className="size-3.5 fill-current" />}
+                  {tab.id === "Solved" && <CheckCircle2Icon className="size-3.5 text-success" />}
+                  <span>{tab.label}</span>
+                  <span className="badge badge-xs opacity-75">
+                    {tab.id === "All"
+                      ? problems.length
+                      : tab.id === "Solved"
+                      ? solvedCount
+                      : starredCount}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Search */}
+              <div className="relative flex-1">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40" />
+                <input
+                  id="problem-search"
+                  type="text"
+                  placeholder="Search problems or topics..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="input input-bordered w-full pl-9 text-sm"
+                />
+                {search && (
+                  <button
+                    onClick={() => setSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
+                  >
+                    <XIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Difficulty Filter */}
+              <div className="flex gap-1.5 flex-wrap">
+                {DIFFICULTIES.map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setSelectedDifficulty(d)}
+                    className={`btn btn-sm ${
+                      selectedDifficulty === d
+                        ? d === "Easy"
+                          ? "btn-success text-white"
+                          : d === "Medium"
+                          ? "btn-warning"
+                          : d === "Hard"
+                          ? "btn-error text-white"
+                          : "btn-primary"
+                        : "btn-ghost"
+                    }`}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+
+              {/* Category Filter */}
+              <select
+                id="category-filter"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="select select-bordered select-sm w-full sm:w-auto"
+              >
+                {allCategories.map((c) => (
+                  <option key={c} value={c}>
+                    {c === "All" ? "All Categories" : c}
+                  </option>
+                ))}
+              </select>
+
+              {/* Clear Filters */}
+              {hasFilters && (
+                <button onClick={clearFilters} className="btn btn-ghost btn-sm gap-1">
+                  <XIcon className="w-3.5 h-3.5" /> Clear
                 </button>
               )}
             </div>
-
-            {/* Difficulty Filter */}
-            <div className="flex gap-1.5 flex-wrap">
-              {DIFFICULTIES.map((d) => (
-                <button
-                  key={d}
-                  onClick={() => setSelectedDifficulty(d)}
-                  className={`btn btn-sm ${
-                    selectedDifficulty === d
-                      ? d === "Easy"
-                        ? "btn-success text-white"
-                        : d === "Medium"
-                        ? "btn-warning"
-                        : d === "Hard"
-                        ? "btn-error text-white"
-                        : "btn-primary"
-                      : "btn-ghost"
-                  }`}
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-
-            {/* Category Filter */}
-            <select
-              id="category-filter"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="select select-bordered select-sm w-full sm:w-auto"
-            >
-              {allCategories.map((c) => (
-                <option key={c} value={c}>
-                  {c === "All" ? "All Categories" : c}
-                </option>
-              ))}
-            </select>
-
-            {/* Clear Filters */}
-            {hasFilters && (
-              <button onClick={clearFilters} className="btn btn-ghost btn-sm gap-1">
-                <XIcon className="w-3.5 h-3.5" /> Clear
-              </button>
-            )}
           </div>
         </div>
 
@@ -166,52 +242,82 @@ function ProblemsPage() {
         {/* PROBLEMS LIST */}
         <div className="space-y-3">
           {filtered.length > 0 ? (
-            filtered.map((problem) => (
-              <Link
-                key={problem.id}
-                to={`/problem/${problem.id}`}
-                className="card bg-base-100 hover:scale-[1.01] transition-all shadow-sm hover:shadow-md group"
-              >
-                <div className="card-body p-4 sm:p-5">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    {/* LEFT SIDE */}
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className={`size-10 sm:size-11 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                        solvedProblemIds.has(problem.id)
-                          ? "bg-success/15 group-hover:bg-success/25"
-                          : "bg-primary/10 group-hover:bg-primary/20"
-                      }`}>
-                        {solvedProblemIds.has(problem.id) ? (
-                          <CheckCircle2Icon className="size-5 sm:size-5.5 text-success" />
-                        ) : (
-                          <Code2Icon className="size-5 sm:size-5.5 text-primary" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                          <h2 className="text-base sm:text-lg font-bold truncate">{problem.title}</h2>
-                          <span className={`badge badge-sm ${getDifficultyBadgeClass(problem.difficulty)}`}>
-                            {problem.difficulty}
-                          </span>
+            filtered.map((problem) => {
+              const isSolved = solvedProblemIds.has(problem.id);
+              const isStarred = starredProblemIds.has(problem.id);
+
+              return (
+                <Link
+                  key={problem.id}
+                  to={`/problem/${problem.id}`}
+                  className="card bg-base-100 hover:scale-[1.01] transition-all shadow-sm hover:shadow-md group"
+                >
+                  <div className="card-body p-4 sm:p-5">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      {/* LEFT SIDE */}
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div
+                          className={`size-10 sm:size-11 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                            isSolved
+                              ? "bg-success/15 group-hover:bg-success/25"
+                              : "bg-primary/10 group-hover:bg-primary/20"
+                          }`}
+                        >
+                          {isSolved ? (
+                            <CheckCircle2Icon className="size-5 sm:size-5.5 text-success" />
+                          ) : (
+                            <Code2Icon className="size-5 sm:size-5.5 text-primary" />
+                          )}
                         </div>
-                        <p className="text-xs text-base-content/50">{problem.category}</p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                            <h2 className="text-base sm:text-lg font-bold truncate">{problem.title}</h2>
+                            <span className={`badge badge-sm ${getDifficultyBadgeClass(problem.difficulty)}`}>
+                              {problem.difficulty}
+                            </span>
+                            {isSolved && (
+                              <span className="badge badge-success badge-sm text-white gap-1">
+                                Solved
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-base-content/50">{problem.category}</p>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* DESCRIPTION PREVIEW (hidden on mobile) */}
-                    <p className="hidden lg:block text-sm text-base-content/60 max-w-xs line-clamp-1 flex-1">
-                      {problem.description.text}
-                    </p>
+                      {/* DESCRIPTION PREVIEW (hidden on mobile) */}
+                      <p className="hidden lg:block text-sm text-base-content/60 max-w-xs line-clamp-1 flex-1">
+                        {problem.description.text}
+                      </p>
 
-                    {/* RIGHT SIDE */}
-                    <div className="flex items-center gap-2 text-primary self-end sm:self-center shrink-0">
-                      <span className="font-semibold text-sm">Solve</span>
-                      <ChevronRightIcon className="size-4 group-hover:translate-x-1 transition-transform" />
+                      {/* RIGHT SIDE (Bookmark + Solve Action) */}
+                      <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+                        {/* Star / Bookmark Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => handleToggleStar(e, problem.id)}
+                          className="btn btn-ghost btn-circle btn-sm"
+                          title={isStarred ? "Remove from bookmarked" : "Bookmark this problem"}
+                        >
+                          <StarIcon
+                            className={`size-4.5 transition-transform group-hover:scale-110 ${
+                              isStarred
+                                ? "text-warning fill-warning"
+                                : "text-base-content/30 hover:text-warning"
+                            }`}
+                          />
+                        </button>
+
+                        <div className="flex items-center gap-1.5 text-primary font-semibold text-sm">
+                          <span>Solve</span>
+                          <ChevronRightIcon className="size-4 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))
+                </Link>
+              );
+            })
           ) : (
             <div className="card bg-base-100 shadow-sm">
               <div className="card-body items-center py-16">

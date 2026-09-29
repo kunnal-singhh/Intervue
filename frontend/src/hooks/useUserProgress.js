@@ -27,3 +27,13 @@ export const useMarkProblemSolved = () => {
     },
   });
 };
+
+export const useToggleStarProblem = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: userApi.toggleStarProblem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userProgress"] });
+    },
+  });
+};

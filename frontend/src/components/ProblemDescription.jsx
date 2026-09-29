@@ -1,16 +1,55 @@
 import { getDifficultyBadgeClass } from "../lib/utils";
+import { StarIcon } from "lucide-react";
+import { useUserProgress, useToggleStarProblem } from "../hooks/useUserProgress";
+import toast from "react-hot-toast";
+
 function ProblemDescription({ problem, currentProblemId, onProblemChange, allProblems }) {
+  const { data: progressData } = useUserProgress();
+  const toggleStarMutation = useToggleStarProblem();
+
+  const isStarred = (progressData?.starredProblems || []).includes(problem.id);
+
+  const handleToggleStar = () => {
+    toggleStarMutation.mutate(problem.id, {
+      onSuccess: (data) => {
+        if (data.isStarred) {
+          toast.success("Problem bookmarked!");
+        } else {
+          toast("Bookmark removed", { icon: "⭐️" });
+        }
+      },
+    });
+  };
+
   return (
     <div className="h-full overflow-y-auto bg-base-200">
       {/* HEADER SECTION */}
       <div className="p-6 bg-base-100 border-b border-base-300">
-        <div className="flex items-start justify-between mb-3">
-          <h1 className="text-3xl font-bold text-base-content">{problem.title}</h1>
-          <span className={`badge ${getDifficultyBadgeClass(problem.difficulty)}`}>
-            {problem.difficulty}
-          </span>
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div>
+            <h1 className="text-3xl font-bold text-base-content">{problem.title}</h1>
+            <p className="text-base-content/60 text-sm mt-1">{problem.category}</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleToggleStar}
+              className="btn btn-ghost btn-circle btn-sm"
+              title={isStarred ? "Remove bookmark" : "Bookmark this problem"}
+            >
+              <StarIcon
+                className={`size-5 transition-transform hover:scale-110 ${
+                  isStarred
+                    ? "text-warning fill-warning"
+                    : "text-base-content/30 hover:text-warning"
+                }`}
+              />
+            </button>
+            <span className={`badge ${getDifficultyBadgeClass(problem.difficulty)}`}>
+              {problem.difficulty}
+            </span>
+          </div>
         </div>
-        <p className="text-base-content/60">{problem.category}</p>
 
         {/* Problem selector */}
         <div className="mt-4">

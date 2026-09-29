@@ -27,6 +27,10 @@ const userSchema=new mongoose.Schema(
            language: { type: String, default: "javascript" },
          },
        ],
+       starredProblems: {
+         type: [String],
+         default: [],
+       },
     },
     {timestamps:true}  //created AT, updated AT
 )
