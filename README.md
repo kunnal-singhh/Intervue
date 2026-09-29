@@ -11,6 +11,7 @@ A full-stack collaborative coding interview platform that enables live video int
 - **Real-time code collaboration** — both interviewer and candidate see code update live (Stream Chat custom events + debounced sync)
 - **Live Sync indicator** — visible badge when collaborative mode is active
 - **Synchronized interview timer** — host-controlled countdown, synced across both participants
+- **Live Interviewer Notes & Candidate Scratchpad** — tabbed panel in the session room with quick observation tags (`[Optimal Approach]`, `[Edge Cases]`, `[Complexity]`) that auto-fill into the final evaluation
 - **Invite link sharing** — copy session URL to clipboard with one click
 - **Public & Private sessions** — private sessions are invite-only (not visible on dashboard)
 
@@ -18,27 +19,32 @@ A full-stack collaborative coding interview platform that enables live video int
 - Monaco Editor (VS Code engine) with JavaScript, Python, and Java support
 - **Real-time code execution** via Piston API
 - **Custom stdin input** support for test cases
+- **Font size adjustments** (12px, 13px, 14px, 16px, 18px)
+- **Reset to Starter Code** with confirmation
+- **One-click Copy Code** with visual feedback
 - **Line count & character count** display
 - **Test case validation** with confetti 🎉 on success
 - **Automatic problem solved tracking** — marks problem as solved in DB when all tests pass
 
-### 📋 Problem Library (15 Problems)
+### 📋 Problem Library & Bookmarks (15 Problems)
 | Difficulty | Count | Problems |
 |------------|-------|----------|
 | Easy | 7 | Two Sum, Reverse String, Valid Palindrome, Best Time to Buy & Sell Stock, Valid Parentheses, Climbing Stairs, Binary Search |
 | Medium | 5 | Maximum Subarray, Container With Most Water, Merge Intervals, Longest Substring Without Repeating Chars, Number of Islands |
 | Hard | 3 | LRU Cache, Word Search, Trapping Rain Water |
 
-- **Search & filter** by title, difficulty, and category
+- **Search & filter** by title, difficulty, category, and status (All, Solved, Bookmarked)
+- **Bookmarking / Starred Problems** with backend persistence
 - **Solved problem indicators** — green checkmarks on completed problems
 - **Custom problem** entry for interviewers (enter any problem not in the list)
 
-### 📊 Dashboard
+### 📊 Dashboard & Reporting
 - **Live Sessions** feed — join open public sessions
 - **Personal Stats** — active sessions, total sessions, hire rate progress bar
 - **Hire rate** computed from your rated sessions (hire/no-hire breakdown)
 - **Past Sessions** grid with difficulty, rating badge, and timestamp
 - **Session review modal** — view final code snapshot (Monaco), interviewer notes, and execution output
+- **Evaluation Report Export** — 1-click Download Markdown (.md) report or copy full evaluation report to clipboard
 - **Daily interview tip** rotating by day of week
 
 ### 👤 Profile & Analytics
@@ -46,12 +52,13 @@ A full-stack collaborative coding interview platform that enables live video int
 - **Hire rate chart** with progress bar and hire/no-hire split
 - **Difficulty breakdown** bar chart (Easy/Medium/Hard)
 - **Rating distribution** across all sessions
-- **Extra stats**: Problems solved, unique problems, **average session duration**
+- **Extra stats**: Problems solved, bookmarked problems, unique problems, **average session duration**
+- **Bookmarked Problems to Practice** quick list on profile
 - **Full session history** — click any session to review it
 
 ### 🏁 Post-Session Experience
-- **Interviewer**: `EndSessionModal` with rating picker (Strong Hire → No Hire) and notes field
-- **Candidate**: `CandidateFeedbackModal` — see your rating, interviewer notes, and session duration before leaving
+- **Interviewer**: `EndSessionModal` with rating picker (Strong Hire → No Hire), live notes pre-filled, and rubric tags
+- **Candidate**: `CandidateFeedbackModal` — see your rating, interviewer notes, duration, and download/copy full report before leaving
 
 ### 🔐 Auth & Security
 - **Clerk authentication** — sign in with Google/GitHub/email
