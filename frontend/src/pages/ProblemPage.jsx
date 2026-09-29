@@ -34,6 +34,10 @@ function ProblemPage() {
       setCurrentProblemId(id);
       setCode(PROBLEMS[id].starterCode[selectedLanguage]);
       setOutput(null);
+    } else if (id && !PROBLEMS[id]) {
+      // Problem not found — redirect to problems list
+      toast.error("Problem not found!");
+      navigate("/problems");
     }
   }, [id, selectedLanguage]);
 

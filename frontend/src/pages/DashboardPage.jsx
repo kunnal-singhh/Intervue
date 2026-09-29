@@ -52,7 +52,7 @@ function DashboardPage() {
     <>
       <div className="min-h-screen bg-base-300">
         <Navbar />
-        <WelcomeSection onCreateSession={() => setShowCreateModal(true)} />
+        <WelcomeSection onCreateSession={() => setShowCreateModal(true)} recentSessionsCount={recentSessions.length} />
 
         {/* Grid layout */}
         <div className="container mx-auto px-4 sm:px-6 pb-16">
