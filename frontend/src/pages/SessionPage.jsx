@@ -16,6 +16,7 @@ import { StreamCall, StreamVideo } from "@stream-io/video-react-sdk";
 import VideoCallUI from "../components/VideoCallUI";
 import EndSessionModal from "../components/EndSessionModal";
 import InterviewTimer from "../components/InterviewTimer";
+import CandidateFeedbackModal from "../components/CandidateFeedbackModal";
 import useStreamClient from "../hooks/useStreamClient";
 import { useIsMobile } from "../hooks/useIsMobile";
 
@@ -28,6 +29,7 @@ function SessionPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showEndModal, setShowEndModal] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [customInput, setCustomInput] = useState("");
 
   const { data: sessionData, isLoading: loadingSession, refetch } = useSessionById(id);
@@ -81,11 +83,12 @@ function SessionPage() {
     if (!session || loadingSession) return;
 
     if (session.status === "completed") {
-      // If the current user is not the host, notify them that the session has ended
       if (!isHost) {
-        toast.success("The host has ended the session");
+        // Show candidate feedback first, then redirect on close
+        setShowFeedback(true);
+      } else {
+        navigate("/dashboard");
       }
-      navigate("/dashboard");
     }
   }, [session, loadingSession, navigate, isHost]);
 
@@ -478,6 +481,16 @@ function SessionPage() {
         problemTitle={session?.problem || "Interview Session"}
         participantName={session?.participant?.name}
         codeLength={code.length}
+      />
+
+      {/* Candidate feedback modal - shown to participant when host ends session */}
+      <CandidateFeedbackModal
+        session={session}
+        isOpen={showFeedback && !isHost}
+        onClose={() => {
+          setShowFeedback(false);
+          navigate("/dashboard");
+        }}
       />
     </div>
   );

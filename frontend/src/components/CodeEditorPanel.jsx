@@ -1,6 +1,7 @@
 import Editor from "@monaco-editor/react";
 import { Loader2Icon, PlayIcon } from "lucide-react";
 import { LANGUAGE_CONFIG } from "../data/problems";
+import { useMemo } from "react";
 
 function CodeEditorPanel({
   selectedLanguage,
@@ -11,6 +12,9 @@ function CodeEditorPanel({
   onCodeChange,
   onRunCode,
 }) {
+  const lineCount = useMemo(() => code?.split("\n").length || 0, [code]);
+  const charCount = code?.length || 0;
+
   return (
     <div className="h-full bg-base-300 flex flex-col">
       <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 bg-base-100 border-t border-base-300">
@@ -32,6 +36,15 @@ function CodeEditorPanel({
             <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 border border-success/30 text-success text-xs font-medium">
               <span className="size-1.5 rounded-full bg-success animate-pulse" />
               <span>Live Sync</span>
+            </div>
+          )}
+
+          {/* Code stats */}
+          {charCount > 0 && (
+            <div className="hidden sm:flex items-center gap-1 text-xs text-base-content/40">
+              <span>{lineCount} lines</span>
+              <span className="opacity-50">•</span>
+              <span>{charCount} chars</span>
             </div>
           )}
         </div>
@@ -64,6 +77,8 @@ function CodeEditorPanel({
             scrollBeyondLastLine: false,
             automaticLayout: true,
             minimap: { enabled: false },
+            wordWrap: "on",
+            tabSize: 2,
           }}
         />
       </div>
