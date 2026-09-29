@@ -15,7 +15,6 @@ import { Toaster } from 'react-hot-toast'
 
 function App() {
  const {isLoaded,isSignedIn}=useUser()
- console.log("isSignedIn",isSignedIn)
   if(!isLoaded){ 
     return null; // or a loading spinner, etc.
   }
