@@ -60,6 +60,7 @@ function DashboardPage() {
             <StatsCards
               activeSessionsCount={activeSessions.length}
               recentSessionsCount={recentSessions.length}
+              recentSessions={recentSessions}
             />
             <ActiveSessions
               sessions={activeSessions}

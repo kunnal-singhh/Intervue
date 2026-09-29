@@ -1,11 +1,9 @@
 import { Link, useLocation } from "react-router";
-import { BookOpenIcon, LayoutDashboardIcon, SparklesIcon } from "lucide-react";
+import { BookOpenIcon, LayoutDashboardIcon, SparklesIcon, UserCircleIcon } from "lucide-react";
 import { UserButton } from "@clerk/clerk-react";
 
 function Navbar() {
   const location = useLocation();
-
-  console.log(location);
 
   const isActive = (path) => location.pathname === path;
 
@@ -48,7 +46,7 @@ function Navbar() {
             </div>
           </Link>
 
-          {/* DASHBORD PAGE LINK */}
+          {/* DASHBOARD PAGE LINK */}
           <Link
             to={"/dashboard"}
             className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg transition-all duration-200 
@@ -63,6 +61,24 @@ function Navbar() {
             <div className="flex items-center gap-x-2">
               <LayoutDashboardIcon className="size-4" />
               <span className="font-medium hidden sm:inline">Dashboard</span>
+            </div>
+          </Link>
+
+          {/* PROFILE PAGE LINK */}
+          <Link
+            to={"/profile"}
+            className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg transition-all duration-200 
+              ${
+                isActive("/profile")
+                  ? "bg-primary text-primary-content"
+                  : "hover:bg-base-200 text-base-content/70 hover:text-base-content"
+              }
+              
+              `}
+          >
+            <div className="flex items-center gap-x-2">
+              <UserCircleIcon className="size-4" />
+              <span className="font-medium hidden sm:inline">Profile</span>
             </div>
           </Link>
 

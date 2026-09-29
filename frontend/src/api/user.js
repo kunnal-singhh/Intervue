@@ -1,0 +1,12 @@
+import axiosInstance from "../lib/axios";
+
+export const userApi = {
+  getUserProgress: async () => {
+    const response = await axiosInstance.get("/user/progress");
+    return response.data;
+  },
+  markProblemSolved: async ({ problemId, language }) => {
+    const response = await axiosInstance.post(`/user/solve/${problemId}`, { language });
+    return response.data;
+  },
+};
