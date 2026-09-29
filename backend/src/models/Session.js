@@ -54,6 +54,10 @@ const sessionSchema = new mongoose.Schema(
             type:String,
             enum:["", "strong_hire", "hire", "lean_hire", "lean_no_hire", "no_hire"],
             default:""
+        },
+        duration:{
+            type:Number, // duration in minutes
+            default:null
         }
     },{ 
         timestamps:true

@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/clerk-react";
 import { useMyRecentSessions } from "../hooks/useSessions";
-import { useUserProgress } from "../hooks/useUserProgress";
+import { useUserProgress, useUserStats } from "../hooks/useUserProgress";
 import Navbar from "../components/Navbar";
 import { useState } from "react";
 import {
@@ -32,10 +32,14 @@ function ProfilePage() {
   const { user } = useUser();
   const { data: sessionsData, isLoading } = useMyRecentSessions();
   const { data: progressData } = useUserProgress();
+  const { data: statsData } = useUserStats();
   const [selectedSession, setSelectedSession] = useState(null);
 
   const sessions = sessionsData?.sessions || [];
   const solvedProblems = progressData?.solvedProblems || [];
+  // Use backend-aggregated stats when available, fallback to client-side
+  const avgDuration = statsData?.avgDuration;
+  const uniqueProblems = statsData?.uniqueProblems ?? sessions.length;
   const ratedSessions = sessions.filter((s) => s.rating && s.rating !== "");
 
   const hireCount = ratedSessions.filter((s) =>
@@ -128,6 +132,30 @@ function ProfilePage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* EXTRA STATS ROW */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body p-4 text-center">
+                <div className="text-3xl font-black text-accent">{solvedProblems.length}</div>
+                <div className="text-xs opacity-60 mt-1">Problems Solved</div>
+              </div>
+            </div>
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body p-4 text-center">
+                <div className="text-3xl font-black text-info">{uniqueProblems}</div>
+                <div className="text-xs opacity-60 mt-1">Unique Problems</div>
+              </div>
+            </div>
+            <div className="card bg-base-100 shadow-sm col-span-2 sm:col-span-1">
+              <div className="card-body p-4 text-center">
+                <div className="text-3xl font-black text-warning">
+                  {avgDuration !== null && avgDuration !== undefined ? `${avgDuration}m` : "—"}
+                </div>
+                <div className="text-xs opacity-60 mt-1">Avg Session Duration</div>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">

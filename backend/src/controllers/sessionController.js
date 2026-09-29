@@ -172,6 +172,11 @@ export async function endSession(req, res) {
     if (executionOutput !== undefined) session.executionOutput = executionOutput;
     if (notes !== undefined) session.notes = notes;
     if (rating !== undefined) session.rating = rating;
+    
+    // Calculate session duration in minutes
+    const durationMs = Date.now() - new Date(session.createdAt).getTime();
+    session.duration = Math.round(durationMs / 60000); // convert ms to minutes
+    
     session.status = "completed";
     await session.save();
 

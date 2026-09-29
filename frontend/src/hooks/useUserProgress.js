@@ -9,12 +9,21 @@ export const useUserProgress = () => {
   });
 };
 
+export const useUserStats = () => {
+  return useQuery({
+    queryKey: ["userStats"],
+    queryFn: userApi.getUserStats,
+    staleTime: 30000,
+  });
+};
+
 export const useMarkProblemSolved = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: userApi.markProblemSolved,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userProgress"] });
+      queryClient.invalidateQueries({ queryKey: ["userStats"] });
     },
   });
 };
