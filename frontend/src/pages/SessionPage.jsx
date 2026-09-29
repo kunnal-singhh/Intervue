@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/clerk-react";
-import { Loader2Icon, LogOutIcon, PhoneOffIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CheckIcon, CopyIcon, Loader2Icon, LogOutIcon, PhoneOffIcon, Share2Icon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useNavigate, useParams } from "react-router";
@@ -14,6 +14,7 @@ import { getDifficultyBadgeClass } from "../lib/utils";
 
 import { StreamCall, StreamVideo } from "@stream-io/video-react-sdk";
 import VideoCallUI from "../components/VideoCallUI";
+import EndSessionModal from "../components/EndSessionModal";
 import useStreamClient from "../hooks/useStreamClient";
 import { useIsMobile } from "../hooks/useIsMobile";
 
@@ -24,6 +25,8 @@ function SessionPage() {
   const { user } = useUser();
   const [output, setOutput] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [showEndModal, setShowEndModal] = useState(false);
 
   const { data: sessionData, isLoading: loadingSession, refetch } = useSessionById(id);
 
@@ -49,14 +52,26 @@ function SessionPage() {
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
   const [code, setCode] = useState(problemData?.starterCode?.[selectedLanguage] || "");
 
+  // Refs for tracking real-time sync state without stale closure traps
+  const codeRef = useRef(code);
+  codeRef.current = code;
+  const selectedLanguageRef = useRef(selectedLanguage);
+  selectedLanguageRef.current = selectedLanguage;
+  const isRemoteEditRef = useRef(false);
+  const debounceTimerRef = useRef(null);
+
   // auto-join session if user is not already a participant and not the host
   useEffect(() => {
     if (!session || !user || loadingSession) return;
     if (isHost || isParticipant) return;
 
-    joinSessionMutation.mutate(id, { onSuccess: refetch });
-
-    // remove the joinSessionMutation, refetch from dependencies to avoid infinite loop
+    joinSessionMutation.mutate(id, {
+      onSuccess: refetch,
+      onError: (err) => {
+        toast.error(err.response?.data?.message || "Could not join session");
+        navigate("/dashboard");
+      },
+    });
   }, [session, user, loadingSession, isHost, isParticipant, id]);
 
   // redirect the "participant" when session ends
@@ -72,36 +87,169 @@ function SessionPage() {
     }
   }, [session, loadingSession, navigate, isHost]);
 
-  // update code when problem loads or changes
+  // update code when problem loads or changes (only if empty)
   useEffect(() => {
-    if (problemData?.starterCode?.[selectedLanguage]) {
+    if (problemData?.starterCode?.[selectedLanguage] && !code) {
       setCode(problemData.starterCode[selectedLanguage]);
     }
   }, [problemData, selectedLanguage]);
 
+  // Listen to Stream channel custom events for real-time live synchronization
+  useEffect(() => {
+    if (!channel || !user) return;
+
+    // If candidate just joined, request latest code from host
+    if (isParticipant) {
+      channel.sendEvent({
+        type: "request_code_sync",
+        senderId: user.id,
+      }).catch((err) => console.error("Request code sync failed:", err));
+    }
+
+    const handleCustomEvent = (event) => {
+      // Ignore our own broadcasted events
+      if (event.user?.id === user.id || event.senderId === user.id) return;
+
+      if (event.type === "code_update") {
+        isRemoteEditRef.current = true;
+        setCode(event.code || "");
+      } else if (event.type === "language_update") {
+        isRemoteEditRef.current = true;
+        if (event.language) setSelectedLanguage(event.language);
+        if (event.code !== undefined) setCode(event.code);
+        setOutput(null);
+        toast(`${event.user?.name || "Partner"} changed language to ${event.language}`, {
+          icon: "🔄",
+        });
+      } else if (event.type === "code_running") {
+        setIsRunning(true);
+        setOutput(null);
+      } else if (event.type === "code_output") {
+        setIsRunning(false);
+        setOutput(event.output);
+      } else if (event.type === "request_code_sync" && isHost) {
+        // Host sends latest code & language to the newly joined participant
+        channel.sendEvent({
+          type: "code_sync",
+          code: codeRef.current,
+          language: selectedLanguageRef.current,
+          senderId: user.id,
+        }).catch((err) => console.error("Host code sync response failed:", err));
+      } else if (event.type === "code_sync" && isParticipant) {
+        isRemoteEditRef.current = true;
+        if (event.language) setSelectedLanguage(event.language);
+        if (event.code !== undefined) setCode(event.code);
+        toast.success("Synchronized code with host!");
+      }
+    };
+
+    const listener = channel.on(handleCustomEvent);
+
+    return () => {
+      if (listener && typeof listener.unsubscribe === "function") {
+        listener.unsubscribe();
+      }
+    };
+  }, [channel, user, isHost, isParticipant]);
+
+  const handleCodeChange = (newCode) => {
+    setCode(newCode);
+
+    // If this update was triggered by remote partner, don't echo back
+    if (isRemoteEditRef.current) {
+      isRemoteEditRef.current = false;
+      return;
+    }
+
+    if (!channel) return;
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        await channel.sendEvent({
+          type: "code_update",
+          code: newCode,
+          senderId: user?.id,
+        });
+      } catch (err) {
+        console.error("Failed to broadcast code update:", err);
+      }
+    }, 200);
+  };
+
   const handleLanguageChange = (e) => {
     const newLang = e.target.value;
     setSelectedLanguage(newLang);
-    // use problem-specific starter code
     const starterCode = problemData?.starterCode?.[newLang] || "";
     setCode(starterCode);
     setOutput(null);
+
+    if (channel) {
+      channel.sendEvent({
+        type: "language_update",
+        language: newLang,
+        code: starterCode,
+        senderId: user?.id,
+      }).catch((err) => console.error("Failed to broadcast language update:", err));
+    }
   };
 
   const handleRunCode = async () => {
     setIsRunning(true);
     setOutput(null);
 
+    if (channel) {
+      channel.sendEvent({
+        type: "code_running",
+        senderId: user?.id,
+      }).catch((err) => console.error("Failed to broadcast code running:", err));
+    }
+
     const result = await executeCode(selectedLanguage, code);
     setOutput(result);
     setIsRunning(false);
+
+    if (channel) {
+      channel.sendEvent({
+        type: "code_output",
+        output: result,
+        senderId: user?.id,
+      }).catch((err) => console.error("Failed to broadcast code output:", err));
+    }
+  };
+
+  const handleCopyLink = () => {
+    const inviteUrl = window.location.href;
+    navigator.clipboard.writeText(inviteUrl);
+    setCopied(true);
+    toast.success("Interview invite link copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleEndSession = () => {
-    if (confirm("Are you sure you want to end this session? All participants will be notified.")) {
-      // this will navigate the HOST to dashboard
-      endSessionMutation.mutate(id, { onSuccess: () => navigate("/dashboard") });
-    }
+    setShowEndModal(true);
+  };
+
+  const handleConfirmEnd = ({ rating, notes }) => {
+    endSessionMutation.mutate(
+      {
+        id,
+        finalCode: code,
+        language: selectedLanguage,
+        executionOutput: output?.output || output?.error || "",
+        notes,
+        rating,
+      },
+      {
+        onSuccess: () => {
+          setShowEndModal(false);
+          navigate("/dashboard");
+        },
+      }
+    );
   };
 
   return (
@@ -133,6 +281,19 @@ function SessionPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <button
+                          onClick={handleCopyLink}
+                          className="btn btn-outline btn-xs sm:btn-sm gap-1.5"
+                          title="Copy interview invite link"
+                        >
+                          {copied ? (
+                            <CheckIcon className="w-3.5 h-3.5 text-success" />
+                          ) : (
+                            <CopyIcon className="w-3.5 h-3.5" />
+                          )}
+                          <span>{copied ? "Copied!" : "Invite Link"}</span>
+                        </button>
+
                         <span
                           className={`badge badge-sm sm:badge-lg ${getDifficultyBadgeClass(
                             session?.difficulty
@@ -245,8 +406,9 @@ function SessionPage() {
                       selectedLanguage={selectedLanguage}
                       code={code}
                       isRunning={isRunning}
+                      isCollaborative={!!channel}
                       onLanguageChange={handleLanguageChange}
-                      onCodeChange={(value) => setCode(value)}
+                      onCodeChange={handleCodeChange}
                       onRunCode={handleRunCode}
                     />
                   </Panel>
@@ -298,6 +460,16 @@ function SessionPage() {
           </Panel>
         </PanelGroup>
       </div>
+
+      <EndSessionModal
+        isOpen={showEndModal}
+        onClose={() => setShowEndModal(false)}
+        onConfirmEnd={handleConfirmEnd}
+        isEnding={endSessionMutation.isPending}
+        problemTitle={session?.problem || "Interview Session"}
+        participantName={session?.participant?.name}
+        codeLength={code.length}
+      />
     </div>
   );
 }

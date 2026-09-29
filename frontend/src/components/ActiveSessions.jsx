@@ -6,6 +6,7 @@ import {
   UsersIcon,
   ZapIcon,
   LoaderIcon,
+  LockIcon,
 } from "lucide-react";
 import { Link } from "react-router";
 import { getDifficultyBadgeClass } from "../lib/utils";
@@ -76,6 +77,11 @@ function ActiveSessions({ sessions, isLoading, isUserInSession }) {
                           <span className="badge badge-error badge-sm">FULL</span>
                         ) : (
                           <span className="badge badge-success badge-sm">OPEN</span>
+                        )}
+                        {session.isPrivate && (
+                          <span className="badge badge-warning badge-sm gap-1">
+                            <LockIcon className="size-3" /> Private
+                          </span>
                         )}
                       </div>
                     </div>

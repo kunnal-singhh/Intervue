@@ -3,7 +3,7 @@ import Session from "../models/Session.js";
 
 export async function createSession(req, res) {
   try {
-    const { problem, difficulty } = req.body;
+    const { problem, difficulty, isPrivate = false } = req.body;
     const userId = req.user._id;
     const clerkId = req.user.clerkId;
 
@@ -15,7 +15,13 @@ export async function createSession(req, res) {
     const callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
     // create session in db
-    const session = await Session.create({ problem, difficulty, host: userId, callId });
+    const session = await Session.create({
+      problem,
+      difficulty,
+      host: userId,
+      callId,
+      isPrivate: Boolean(isPrivate),
+    });
 
     // create stream video call
     await streamClient.video.call("default", callId).getOrCreate({
@@ -41,9 +47,21 @@ export async function createSession(req, res) {
   }
 }
 
-export async function getActiveSessions(_, res) {
+export async function getActiveSessions(req, res) {
   try {
-    const sessions = await Session.find({ status: "active" })
+    const userId = req.user?._id;
+
+    // Show public active sessions OR private sessions where current user is host/participant
+    const filter = {
+      status: "active",
+      $or: [
+        { isPrivate: false },
+        { isPrivate: { $exists: false } },
+        ...(userId ? [{ host: userId }, { participant: userId }] : []),
+      ],
+    };
+
+    const sessions = await Session.find(filter)
       .populate("host", "name profileImage email clerkId")
       .populate("participant", "name profileImage email clerkId")
       .sort({ createdAt: -1 })
@@ -65,6 +83,8 @@ export async function getMyRecentSessions(req, res) {
       status: "completed",
       $or: [{ host: userId }, { participant: userId }],
     })
+      .populate("host", "name email profileImage clerkId")
+      .populate("participant", "name email profileImage clerkId")
       .sort({ createdAt: -1 })
       .limit(20);
 
@@ -129,6 +149,7 @@ export async function joinSession(req, res) {
 export async function endSession(req, res) {
   try {
     const { id } = req.params;
+    const { finalCode, language, executionOutput, notes, rating } = req.body;
     const userId = req.user._id;
 
     const session = await Session.findById(id);
@@ -145,16 +166,30 @@ export async function endSession(req, res) {
       return res.status(400).json({ message: "Session is already completed" });
     }
 
-    // delete stream video call
-    const call = streamClient.video.call("default", session.callId);
-    await call.delete({ hard: true });
-
-    // delete stream chat channel
-    const channel = chatClient.channel("messaging", session.callId);
-    await channel.delete();
-
+    // Save final code, output, notes, and rubric rating
+    if (finalCode !== undefined) session.finalCode = finalCode;
+    if (language) session.language = language;
+    if (executionOutput !== undefined) session.executionOutput = executionOutput;
+    if (notes !== undefined) session.notes = notes;
+    if (rating !== undefined) session.rating = rating;
     session.status = "completed";
     await session.save();
+
+    // delete stream video call safely
+    try {
+      const call = streamClient.video.call("default", session.callId);
+      await call.delete({ hard: true });
+    } catch (streamErr) {
+      console.log("Stream video call delete non-fatal error:", streamErr.message);
+    }
+
+    // delete stream chat channel safely
+    try {
+      const channel = chatClient.channel("messaging", session.callId);
+      await channel.delete();
+    } catch (chatErr) {
+      console.log("Stream chat channel delete non-fatal error:", chatErr.message);
+    }
 
     res.status(200).json({ session, message: "Session ended successfully" });
   } catch (error) {

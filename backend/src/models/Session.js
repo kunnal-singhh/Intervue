@@ -29,6 +29,31 @@ const sessionSchema = new mongoose.Schema(
         callId:{ 
             type:String,
             default:""
+        },
+        isPrivate:{
+            type:Boolean,
+            default:false
+        },
+        finalCode:{
+            type:String,
+            default:""
+        },
+        language:{
+            type:String,
+            default:"javascript"
+        },
+        executionOutput:{
+            type:String,
+            default:""
+        },
+        notes:{
+            type:String,
+            default:""
+        },
+        rating:{
+            type:String,
+            enum:["", "strong_hire", "hire", "lean_hire", "lean_no_hire", "no_hire"],
+            default:""
         }
     },{ 
         timestamps:true

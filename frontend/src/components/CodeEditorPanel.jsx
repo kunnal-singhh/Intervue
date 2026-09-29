@@ -6,6 +6,7 @@ function CodeEditorPanel({
   selectedLanguage,
   code,
   isRunning,
+  isCollaborative = false,
   onLanguageChange,
   onCodeChange,
   onRunCode,
@@ -15,8 +16,8 @@ function CodeEditorPanel({
       <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 bg-base-100 border-t border-base-300">
         <div className="flex items-center gap-2 sm:gap-3">
           <img
-            src={LANGUAGE_CONFIG[selectedLanguage].icon}
-            alt={LANGUAGE_CONFIG[selectedLanguage].name}
+            src={LANGUAGE_CONFIG[selectedLanguage]?.icon || "/javascript.png"}
+            alt={LANGUAGE_CONFIG[selectedLanguage]?.name || "Code"}
             className="size-5 sm:size-6"
           />
           <select className="select select-xs sm:select-sm text-xs sm:text-sm" value={selectedLanguage} onChange={onLanguageChange}>
@@ -26,6 +27,13 @@ function CodeEditorPanel({
               </option>
             ))}
           </select>
+
+          {isCollaborative && (
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 border border-success/30 text-success text-xs font-medium">
+              <span className="size-1.5 rounded-full bg-success animate-pulse" />
+              <span>Live Sync</span>
+            </div>
+          )}
         </div>
 
         <button className="btn btn-primary btn-xs sm:btn-sm gap-1.5 sm:gap-2" disabled={isRunning} onClick={onRunCode}>
