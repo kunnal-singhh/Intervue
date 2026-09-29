@@ -8,6 +8,7 @@ import ProblemDescription from "../components/ProblemDescription";
 import OutputPanel from "../components/OutputPanel";
 import CodeEditorPanel from "../components/CodeEditorPanel";
 import { executeCode } from "../lib/codeExecution";
+import { useMarkProblemSolved } from "../hooks/useUserProgress";
 
 import toast from "react-hot-toast";
 import confetti from "canvas-confetti";
@@ -18,6 +19,7 @@ function ProblemPage() {
   const isMobile = useIsMobile();
   const { id } = useParams();
   const navigate = useNavigate();
+  const markProblemSolvedMutation = useMarkProblemSolved();
 
   const [currentProblemId, setCurrentProblemId] = useState("two-sum");
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
@@ -106,6 +108,8 @@ function ProblemPage() {
       if (testsPassed) {
         triggerConfetti();
         toast.success("All tests passed! Great job!");
+        // Mark problem as solved in the backend
+        markProblemSolvedMutation.mutate({ problemId: currentProblemId, language: selectedLanguage });
       } else {
         toast.error("Tests failed. Check your output!");
       }

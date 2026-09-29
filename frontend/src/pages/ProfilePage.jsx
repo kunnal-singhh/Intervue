@@ -1,5 +1,6 @@
 import { useUser } from "@clerk/clerk-react";
 import { useMyRecentSessions } from "../hooks/useSessions";
+import { useUserProgress } from "../hooks/useUserProgress";
 import Navbar from "../components/Navbar";
 import { useState } from "react";
 import {
@@ -30,9 +31,11 @@ const RATING_BADGES = {
 function ProfilePage() {
   const { user } = useUser();
   const { data: sessionsData, isLoading } = useMyRecentSessions();
+  const { data: progressData } = useUserProgress();
   const [selectedSession, setSelectedSession] = useState(null);
 
   const sessions = sessionsData?.sessions || [];
+  const solvedProblems = progressData?.solvedProblems || [];
   const ratedSessions = sessions.filter((s) => s.rating && s.rating !== "");
 
   const hireCount = ratedSessions.filter((s) =>
@@ -98,6 +101,12 @@ function ProfilePage() {
                       <Code2Icon className="w-3.5 h-3.5" />
                       {hardCount > 0 ? "Hard solver" : mediumCount > 0 ? "Medium solver" : "Easy solver"}
                     </div>
+                    {solvedProblems.length > 0 && (
+                      <div className="badge badge-accent badge-lg gap-1">
+                        <CheckCircleIcon className="w-3.5 h-3.5" />
+                        {solvedProblems.length} solved
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

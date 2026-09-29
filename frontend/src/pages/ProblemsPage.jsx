@@ -2,8 +2,9 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router";
 import Navbar from "../components/Navbar";
 import { PROBLEMS } from "../data/problems";
-import { ChevronRightIcon, Code2Icon, SearchIcon, XIcon, FilterIcon } from "lucide-react";
+import { ChevronRightIcon, Code2Icon, SearchIcon, XIcon, FilterIcon, CheckCircle2Icon } from "lucide-react";
 import { getDifficultyBadgeClass } from "../lib/utils";
+import { useUserProgress } from "../hooks/useUserProgress";
 
 const DIFFICULTIES = ["All", "Easy", "Medium", "Hard"];
 
@@ -12,6 +13,8 @@ function ProblemsPage() {
   const [search, setSearch] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const { data: progressData } = useUserProgress();
+  const solvedProblemIds = new Set((progressData?.solvedProblems || []).map((p) => p.problemId));
 
   // Extract all unique top-level categories
   const allCategories = useMemo(() => {
@@ -41,6 +44,7 @@ function ProblemsPage() {
   const easyCount = problems.filter((p) => p.difficulty === "Easy").length;
   const mediumCount = problems.filter((p) => p.difficulty === "Medium").length;
   const hardCount = problems.filter((p) => p.difficulty === "Hard").length;
+  const solvedCount = problems.filter((p) => solvedProblemIds.has(p.id)).length;
 
   const hasFilters = search || selectedDifficulty !== "All" || selectedCategory !== "All";
 
@@ -64,12 +68,13 @@ function ProblemsPage() {
         </div>
 
         {/* STATS ROW */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {[
-            { label: "Total", count: problems.length, color: "text-primary" },
+        { label: "Total", count: problems.length, color: "text-primary" },
             { label: "Easy", count: easyCount, color: "text-success" },
             { label: "Medium", count: mediumCount, color: "text-warning" },
             { label: "Hard", count: hardCount, color: "text-error" },
+            { label: "Solved", count: solvedCount, color: "text-accent" },
           ].map(({ label, count, color }) => (
             <div key={label} className="card bg-base-100 shadow-sm">
               <div className="card-body p-3 sm:p-4 text-center">
@@ -171,8 +176,16 @@ function ProblemsPage() {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     {/* LEFT SIDE */}
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="size-10 sm:size-11 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors flex items-center justify-center shrink-0">
-                        <Code2Icon className="size-5 sm:size-5.5 text-primary" />
+                      <div className={`size-10 sm:size-11 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                        solvedProblemIds.has(problem.id)
+                          ? "bg-success/15 group-hover:bg-success/25"
+                          : "bg-primary/10 group-hover:bg-primary/20"
+                      }`}>
+                        {solvedProblemIds.has(problem.id) ? (
+                          <CheckCircle2Icon className="size-5 sm:size-5.5 text-success" />
+                        ) : (
+                          <Code2Icon className="size-5 sm:size-5.5 text-primary" />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-0.5">
