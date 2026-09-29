@@ -1,8 +1,21 @@
-import { CheckIcon, ClockIcon, Code2Icon, CopyIcon, FileTextIcon, StarIcon, UsersIcon, XIcon } from "lucide-react";
+import {
+  CheckIcon,
+  ClockIcon,
+  Code2Icon,
+  CopyIcon,
+  DownloadIcon,
+  FileDownIcon,
+  FileTextIcon,
+  StarIcon,
+  UsersIcon,
+  XIcon,
+} from "lucide-react";
 import { useState } from "react";
 import Editor from "@monaco-editor/react";
 import { getDifficultyBadgeClass } from "../lib/utils";
 import { format } from "date-fns";
+import toast from "react-hot-toast";
+import { downloadSessionReport, copySessionReportToClipboard } from "../lib/exportReport";
 
 const RATING_LABELS = {
   strong_hire: { text: "Strong Hire", color: "badge-success text-white" },
@@ -14,6 +27,7 @@ const RATING_LABELS = {
 
 function SessionReviewModal({ session, isOpen, onClose }) {
   const [copied, setCopied] = useState(false);
+  const [copiedReport, setCopiedReport] = useState(false);
 
   if (!isOpen || !session) return null;
 
@@ -22,6 +36,26 @@ function SessionReviewModal({ session, isOpen, onClose }) {
     navigator.clipboard.writeText(session.finalCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadReport = () => {
+    try {
+      downloadSessionReport(session);
+      toast.success("Interview report downloaded!");
+    } catch (e) {
+      toast.error("Failed to download report");
+    }
+  };
+
+  const handleCopyReport = async () => {
+    try {
+      await copySessionReportToClipboard(session);
+      setCopiedReport(true);
+      toast.success("Full evaluation report copied to clipboard!");
+      setTimeout(() => setCopiedReport(false), 2500);
+    } catch (e) {
+      toast.error("Failed to copy report");
+    }
   };
 
   const ratingInfo = session.rating ? RATING_LABELS[session.rating] : null;
@@ -143,8 +177,31 @@ function SessionReviewModal({ session, isOpen, onClose }) {
         </div>
 
         {/* FOOTER */}
-        <div className="modal-action pt-3 border-t border-base-300">
-          <button onClick={onClose} className="btn btn-primary btn-sm">
+        <div className="modal-action pt-3 border-t border-base-300 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadReport}
+              className="btn btn-outline btn-sm gap-1.5"
+              title="Download detailed Markdown report for this interview"
+            >
+              <DownloadIcon className="size-3.5" />
+              <span>Download Report (.md)</span>
+            </button>
+            <button
+              onClick={handleCopyReport}
+              className="btn btn-ghost btn-sm gap-1.5"
+              title="Copy markdown report to clipboard"
+            >
+              {copiedReport ? (
+                <CheckIcon className="size-3.5 text-success" />
+              ) : (
+                <CopyIcon className="size-3.5" />
+              )}
+              <span>{copiedReport ? "Report Copied" : "Copy Report"}</span>
+            </button>
+          </div>
+
+          <button onClick={onClose} className="btn btn-primary btn-sm px-5">
             Close
           </button>
         </div>

@@ -1,5 +1,17 @@
 import { useUser } from "@clerk/clerk-react";
-import { CheckIcon, CopyIcon, Loader2Icon, LogOutIcon, PhoneOffIcon, Share2Icon } from "lucide-react";
+import {
+  BookOpenIcon,
+  CheckIcon,
+  ClockIcon,
+  CopyIcon,
+  FileTextIcon,
+  Loader2Icon,
+  LogOutIcon,
+  PhoneOffIcon,
+  PlusCircleIcon,
+  Share2Icon,
+  SparklesIcon,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -31,6 +43,8 @@ function SessionPage() {
   const [showEndModal, setShowEndModal] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [customInput, setCustomInput] = useState("");
+  const [activeTab, setActiveTab] = useState("problem"); // "problem" | "notes"
+  const [liveNotes, setLiveNotes] = useState("");
 
   const { data: sessionData, isLoading: loadingSession, refetch } = useSessionById(id);
 
@@ -202,6 +216,24 @@ function SessionPage() {
     }
   };
 
+  const handleResetCode = () => {
+    const starterCode = problemData?.starterCode?.[selectedLanguage] || "";
+    setCode(starterCode);
+    setOutput(null);
+
+    if (channel) {
+      channel.sendEvent({
+        type: "code_update",
+        code: starterCode,
+        senderId: user?.id,
+      }).catch((err) => console.error("Failed to broadcast code reset:", err));
+    }
+  };
+
+  const insertNoteTag = (tag) => {
+    setLiveNotes((prev) => (prev ? `${prev}\n• [${tag}] ` : `• [${tag}] `));
+  };
+
   const handleRunCode = async () => {
     setIsRunning(true);
     setOutput(null);
@@ -330,77 +362,175 @@ function SessionPage() {
                     </div>
                   </div>
 
-                  <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                    {/* problem desc */}
-                    {problemData?.description && (
-                      <div className="bg-base-100 rounded-xl shadow-sm p-4 sm:p-5 border border-base-300">
-                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-base-content">Description</h2>
-                        <div className="space-y-2 sm:space-y-3 text-sm sm:text-base leading-relaxed">
-                          <p className="text-base-content/90">{problemData.description.text}</p>
-                          {problemData.description.notes?.map((note, idx) => (
-                            <p key={idx} className="text-base-content/90">
-                              {note}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* examples section */}
-                    {problemData?.examples && problemData.examples.length > 0 && (
-                      <div className="bg-base-100 rounded-xl shadow-sm p-4 sm:p-5 border border-base-300">
-                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-base-content">Examples</h2>
-
-                        <div className="space-y-3 sm:space-y-4">
-                          {problemData.examples.map((example, idx) => (
-                            <div key={idx}>
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="badge badge-sm">{idx + 1}</span>
-                                <p className="font-semibold text-sm sm:text-base text-base-content">Example {idx + 1}</p>
-                              </div>
-                              <div className="bg-base-200 rounded-lg p-3 sm:p-4 font-mono text-xs sm:text-sm space-y-1.5">
-                                <div className="flex gap-2">
-                                  <span className="text-primary font-bold min-w-[60px] sm:min-w-[70px]">
-                                    Input:
-                                  </span>
-                                  <span className="break-all">{example.input}</span>
-                                </div>
-                                <div className="flex gap-2">
-                                  <span className="text-secondary font-bold min-w-[60px] sm:min-w-[70px]">
-                                    Output:
-                                  </span>
-                                  <span className="break-all">{example.output}</span>
-                                </div>
-                                {example.explanation && (
-                                  <div className="pt-2 border-t border-base-300 mt-2">
-                                    <span className="text-base-content/60 font-sans text-xs">
-                                      <span className="font-semibold">Explanation:</span>{" "}
-                                      {example.explanation}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Constraints */}
-                    {problemData?.constraints && problemData.constraints.length > 0 && (
-                      <div className="bg-base-100 rounded-xl shadow-sm p-4 sm:p-5 border border-base-300">
-                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-base-content">Constraints</h2>
-                        <ul className="space-y-2 text-base-content/90 text-xs sm:text-sm">
-                          {problemData.constraints.map((constraint, idx) => (
-                            <li key={idx} className="flex gap-2">
-                              <span className="text-primary">•</span>
-                              <code className="text-xs sm:text-sm">{constraint}</code>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                  <div className="flex items-center gap-2 px-4 sm:px-6 pt-2 bg-base-100 border-b border-base-300">
+                    <button
+                      onClick={() => setActiveTab("problem")}
+                      className={`pb-2.5 px-3 font-semibold text-xs sm:text-sm border-b-2 transition-colors flex items-center gap-1.5 ${
+                        activeTab === "problem"
+                          ? "border-primary text-primary"
+                          : "border-transparent text-base-content/60 hover:text-base-content"
+                      }`}
+                    >
+                      <BookOpenIcon className="size-4" />
+                      <span>Problem Description</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("notes")}
+                      className={`pb-2.5 px-3 font-semibold text-xs sm:text-sm border-b-2 transition-colors flex items-center gap-1.5 ${
+                        activeTab === "notes"
+                          ? "border-primary text-primary"
+                          : "border-transparent text-base-content/60 hover:text-base-content"
+                      }`}
+                    >
+                      <FileTextIcon className="size-4" />
+                      <span>{isHost ? "Interviewer Notes & Rubric" : "My Scratchpad"}</span>
+                      {liveNotes.trim().length > 0 && (
+                        <span className="badge badge-xs badge-primary font-bold">●</span>
+                      )}
+                    </button>
                   </div>
+
+                  {activeTab === "problem" ? (
+                    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                      {/* problem desc */}
+                      {problemData?.description && (
+                        <div className="bg-base-100 rounded-xl shadow-sm p-4 sm:p-5 border border-base-300">
+                          <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-base-content">Description</h2>
+                          <div className="space-y-2 sm:space-y-3 text-sm sm:text-base leading-relaxed">
+                            <p className="text-base-content/90">{problemData.description.text}</p>
+                            {problemData.description.notes?.map((note, idx) => (
+                              <p key={idx} className="text-base-content/90">
+                                {note}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* examples section */}
+                      {problemData?.examples && problemData.examples.length > 0 && (
+                        <div className="bg-base-100 rounded-xl shadow-sm p-4 sm:p-5 border border-base-300">
+                          <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-base-content">Examples</h2>
+
+                          <div className="space-y-3 sm:space-y-4">
+                            {problemData.examples.map((example, idx) => (
+                              <div key={idx}>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="badge badge-sm">{idx + 1}</span>
+                                  <p className="font-semibold text-sm sm:text-base text-base-content">Example {idx + 1}</p>
+                                </div>
+                                <div className="bg-base-200 rounded-lg p-3 sm:p-4 font-mono text-xs sm:text-sm space-y-1.5">
+                                  <div className="flex gap-2">
+                                    <span className="text-primary font-bold min-w-[60px] sm:min-w-[70px]">
+                                      Input:
+                                    </span>
+                                    <span className="break-all">{example.input}</span>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <span className="text-secondary font-bold min-w-[60px] sm:min-w-[70px]">
+                                      Output:
+                                    </span>
+                                    <span className="break-all">{example.output}</span>
+                                  </div>
+                                  {example.explanation && (
+                                    <div className="pt-2 border-t border-base-300 mt-2">
+                                      <span className="text-base-content/60 font-sans text-xs">
+                                        <span className="font-semibold">Explanation:</span>{" "}
+                                        {example.explanation}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Constraints */}
+                      {problemData?.constraints && problemData.constraints.length > 0 && (
+                        <div className="bg-base-100 rounded-xl shadow-sm p-4 sm:p-5 border border-base-300">
+                          <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-base-content">Constraints</h2>
+                          <ul className="space-y-2 text-base-content/90 text-xs sm:text-sm">
+                            {problemData.constraints.map((constraint, idx) => (
+                              <li key={idx} className="flex gap-2">
+                                <span className="text-primary">•</span>
+                                <code className="text-xs sm:text-sm">{constraint}</code>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* NOTES / SCRATCHPAD TAB */
+                    <div className="p-4 sm:p-6 space-y-4">
+                      <div className="bg-base-100 rounded-xl shadow-sm p-4 sm:p-5 border border-base-300">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                          <div>
+                            <h2 className="text-base sm:text-lg font-bold text-base-content flex items-center gap-2">
+                              <SparklesIcon className="size-4 text-primary" />
+                              <span>{isHost ? "Live Interview Assessment Notes" : "Personal Scratchpad"}</span>
+                            </h2>
+                            <p className="text-xs text-base-content/60 mt-0.5">
+                              {isHost
+                                ? "Record candidate observations, communication style, algorithm correctness, and edge-case handling in real-time. These notes will automatically pre-fill when ending the session."
+                                : "Brainstorm logic, edge cases, and rough calculations here. Private to your view."}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Quick tags for Host */}
+                        {isHost && (
+                          <div className="mb-3">
+                            <span className="text-[11px] font-semibold text-base-content/60 block mb-1.5">
+                              Quick Assessment Tags:
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {[
+                                "Optimal Approach",
+                                "Brute Force Only",
+                                "Strong Communication",
+                                "Good Edge Case Handling",
+                                "Time & Space Complexity",
+                                "Clean Code & Naming",
+                                "Hint Needed",
+                              ].map((tag) => (
+                                <button
+                                  key={tag}
+                                  type="button"
+                                  onClick={() => insertNoteTag(tag)}
+                                  className="btn btn-outline btn-xs gap-1 hover:btn-primary"
+                                >
+                                  <PlusCircleIcon className="size-3" />
+                                  <span>{tag}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <textarea
+                          rows={10}
+                          className="textarea textarea-bordered w-full font-sans text-sm leading-relaxed"
+                          placeholder={
+                            isHost
+                              ? "• [Optimal Approach] Candidate explained approach well\n• [Time & Space Complexity] Identified hash map O(N) solution\n• Handled negative integers properly..."
+                              : "Use this scratchpad to draft test inputs, edge cases, or pseudo-code..."
+                          }
+                          value={liveNotes}
+                          onChange={(e) => setLiveNotes(e.target.value)}
+                        />
+
+                        <div className="flex items-center justify-between mt-2 text-xs text-base-content/50">
+                          <span>{liveNotes.length} characters</span>
+                          {isHost && (
+                            <span className="text-success font-medium">✓ Auto-syncs to End Session review</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Panel>
 
@@ -417,6 +547,7 @@ function SessionPage() {
                       onLanguageChange={handleLanguageChange}
                       onCodeChange={handleCodeChange}
                       onRunCode={handleRunCode}
+                      onResetCode={handleResetCode}
                     />
                   </Panel>
 
@@ -481,6 +612,7 @@ function SessionPage() {
         problemTitle={session?.problem || "Interview Session"}
         participantName={session?.participant?.name}
         codeLength={code.length}
+        initialNotes={liveNotes}
       />
 
       {/* Candidate feedback modal - shown to participant when host ends session */}

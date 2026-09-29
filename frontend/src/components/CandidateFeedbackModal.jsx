@@ -1,6 +1,20 @@
-import { XIcon, ClockIcon, Code2Icon, FileTextIcon, StarIcon, UsersIcon, CheckCircle2Icon } from "lucide-react";
+import {
+  XIcon,
+  ClockIcon,
+  Code2Icon,
+  FileTextIcon,
+  StarIcon,
+  UsersIcon,
+  CheckCircle2Icon,
+  DownloadIcon,
+  CopyIcon,
+  CheckIcon,
+} from "lucide-react";
+import { useState } from "react";
 import { getDifficultyBadgeClass } from "../lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import toast from "react-hot-toast";
+import { downloadSessionReport, copySessionReportToClipboard } from "../lib/exportReport";
 
 const RATING_LABELS = {
   strong_hire: { text: "Strong Hire ✨", color: "text-success", bg: "bg-success/10 border-success/30" },
@@ -14,7 +28,29 @@ const RATING_LABELS = {
  * Modal shown to the CANDIDATE after a session ends, summarizing the interview.
  */
 function CandidateFeedbackModal({ session, isOpen, onClose }) {
+  const [copiedReport, setCopiedReport] = useState(false);
+
   if (!isOpen || !session) return null;
+
+  const handleDownload = () => {
+    try {
+      downloadSessionReport(session);
+      toast.success("Interview report downloaded!");
+    } catch {
+      toast.error("Failed to download report");
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await copySessionReportToClipboard(session);
+      setCopiedReport(true);
+      toast.success("Report copied to clipboard!");
+      setTimeout(() => setCopiedReport(false), 2500);
+    } catch {
+      toast.error("Failed to copy report");
+    }
+  };
 
   const ratingInfo = session.rating && session.rating !== ""
     ? RATING_LABELS[session.rating]
@@ -122,8 +158,31 @@ function CandidateFeedbackModal({ session, isOpen, onClose }) {
         </div>
 
         {/* FOOTER */}
-        <div className="modal-action pt-4 border-t border-base-300">
-          <button onClick={onClose} className="btn btn-primary w-full">
+        <div className="modal-action pt-4 border-t border-base-300 flex flex-col sm:flex-row items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={handleDownload}
+              className="btn btn-outline btn-sm gap-1.5 flex-1 sm:flex-initial"
+              title="Download interview report as Markdown file"
+            >
+              <DownloadIcon className="size-3.5" />
+              <span>Download (.md)</span>
+            </button>
+            <button
+              onClick={handleCopy}
+              className="btn btn-ghost btn-sm gap-1.5 flex-1 sm:flex-initial"
+              title="Copy markdown report to clipboard"
+            >
+              {copiedReport ? (
+                <CheckIcon className="size-3.5 text-success" />
+              ) : (
+                <CopyIcon className="size-3.5" />
+              )}
+              <span>{copiedReport ? "Copied" : "Copy"}</span>
+            </button>
+          </div>
+
+          <button onClick={onClose} className="btn btn-primary btn-sm w-full sm:w-auto sm:ml-auto">
             View Dashboard
           </button>
         </div>

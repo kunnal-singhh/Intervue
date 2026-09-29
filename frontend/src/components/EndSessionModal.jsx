@@ -1,5 +1,5 @@
 import { CheckCircle2Icon, Loader2Icon, LogOutIcon, MessageSquareIcon, StarIcon, XIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const RATINGS = [
   { value: "strong_hire", label: "Strong Hire", color: "badge-success text-white" },
@@ -17,9 +17,16 @@ function EndSessionModal({
   problemTitle,
   participantName,
   codeLength,
+  initialNotes = "",
 }) {
   const [rating, setRating] = useState("");
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(initialNotes || "");
+
+  useEffect(() => {
+    if (isOpen && initialNotes) {
+      setNotes(initialNotes);
+    }
+  }, [isOpen, initialNotes]);
 
   if (!isOpen) return null;
 
