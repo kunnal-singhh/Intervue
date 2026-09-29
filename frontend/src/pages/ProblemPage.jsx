@@ -24,6 +24,7 @@ function ProblemPage() {
   const [code, setCode] = useState(PROBLEMS[currentProblemId].starterCode.javascript);
   const [output, setOutput] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [customInput, setCustomInput] = useState("");
 
   const currentProblem = PROBLEMS[currentProblemId];
 
@@ -88,7 +89,7 @@ function ProblemPage() {
     setIsRunning(true);
     setOutput(null);
 
-    const result = await executeCode(selectedLanguage, code);
+    const result = await executeCode(selectedLanguage, code, customInput);
     setOutput(result);
     setIsRunning(false);
 
@@ -147,7 +148,12 @@ function ProblemPage() {
               {/* Bottom panel - Output Panel*/}
 
               <Panel defaultSize={30} minSize={30}>
-                <OutputPanel output={output} />
+                <OutputPanel
+                  output={output}
+                  customInput={customInput}
+                  onCustomInputChange={setCustomInput}
+                  onClearOutput={() => setOutput(null)}
+                />
               </Panel>
             </PanelGroup>
           </Panel>

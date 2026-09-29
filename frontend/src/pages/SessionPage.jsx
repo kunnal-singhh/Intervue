@@ -28,6 +28,7 @@ function SessionPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showEndModal, setShowEndModal] = useState(false);
+  const [customInput, setCustomInput] = useState("");
 
   const { data: sessionData, isLoading: loadingSession, refetch } = useSessionById(id);
 
@@ -209,7 +210,7 @@ function SessionPage() {
       }).catch((err) => console.error("Failed to broadcast code running:", err));
     }
 
-    const result = await executeCode(selectedLanguage, code);
+    const result = await executeCode(selectedLanguage, code, customInput);
     setOutput(result);
     setIsRunning(false);
 
@@ -419,7 +420,12 @@ function SessionPage() {
                   <PanelResizeHandle className="h-2 bg-base-300 hover:bg-primary transition-colors cursor-row-resize" />
 
                   <Panel defaultSize={30} minSize={15}>
-                    <OutputPanel output={output} />
+                    <OutputPanel
+                      output={output}
+                      customInput={customInput}
+                      onCustomInputChange={setCustomInput}
+                      onClearOutput={() => setOutput(null)}
+                    />
                   </Panel>
                 </PanelGroup>
               </Panel>

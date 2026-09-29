@@ -12,7 +12,7 @@ const VERSION_MAP = {
   java: "4",
 };
 
-async function executeWithPiston(language, code) {
+async function executeWithPiston(language, code, stdin = "") {
   const pistonLang = language === "python" ? "python" : language === "javascript" ? "javascript" : "java";
   const response = await fetch("https://emkc.org/api/v2/piston/execute", {
     method: "POST",
@@ -23,6 +23,7 @@ async function executeWithPiston(language, code) {
       language: pistonLang,
       version: "*",
       files: [{ content: code }],
+      stdin: stdin || "",
     }),
   });
 
@@ -42,7 +43,7 @@ async function executeWithPiston(language, code) {
 }
 
 export const executeCode = async (req, res) => {
-  const { language, code } = req.body;
+  const { language, code, stdin = "" } = req.body;
 
   if (!language || !code) {
     return res.status(400).json({ success: false, error: "Language and code are required." });
@@ -67,6 +68,7 @@ export const executeCode = async (req, res) => {
           script: code,
           language: jdoodleLang,
           versionIndex: VERSION_MAP[jdoodleLang] || "0",
+          stdin: stdin || "",
         }),
       });
 

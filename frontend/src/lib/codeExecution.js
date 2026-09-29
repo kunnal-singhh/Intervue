@@ -5,11 +5,12 @@ import axiosInstance from "./axios.js";
  * @param {string} code - source code to executed
  * @returns {Promise<{success:boolean, output?:string, error?: string}>}
  */
-export async function executeCode(language, code) {
+export async function executeCode(language, code, stdin = "") {
   try {
     const response = await axiosInstance.post("/code/execute", {
       language,
       code,
+      stdin,
     });
 
     const data = response.data;
